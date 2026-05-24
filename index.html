@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RKLB ダッシュボード | Rocket Lab USA</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0d1117; --card: #161b22; --border: #30363d;
+    --text: #e6edf3; --muted: #8b949e;
+    --blue: #58a6ff; --green: #3fb950; --orange: #d29922;
+    --red: #f85149; --purple: #bc8cff; --cyan: #39d353;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+  header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+  header h1 { font-size: 1.4rem; }
+  header span { color: var(--muted); font-size: 0.8rem; }
+  .tabs { display: flex; padding: 0 24px; border-bottom: 1px solid var(--border); gap: 4px; }
+  .tab { padding: 10px 16px; cursor: pointer; border: none; background: none; color: var(--muted); font-size: 0.9rem; border-bottom: 2px solid transparent; }
+  .tab.active { color: var(--blue); border-bottom-color: var(--blue); }
+  .panel { display: none; padding: 24px; }
+  .panel.active { display: block; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 16px; }
+  .card h3 { font-size: 0.85rem; color: var(--muted); margin-bottom: 12px; }
+  canvas { max-height: 280px; }
+  .summary-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  .summary-table td { padding: 8px 12px; border-bottom: 1px solid var(--border); }
+  .summary-table tr:last-child td { border-bottom: none; }
+  .summary-table td:first-child { color: var(--muted); width: 45%; }
+  @media (max-width: 700px) { .grid2, .grid3 { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>🚀 RKLB｜Rocket Lab USA ダッシュボード</h1>
+  <span>更新: 2026-05-24 07:14</span>
+</header>
+<div class="tabs">
+  <button class="tab active" onclick="showTab(0)">📈 業績推移</button>
+  <button class="tab" onclick="showTab(1)">🔑 KPIトレンド</button>
+  <button class="tab" onclick="showTab(2)">📊 テクニカル</button>
+  <button class="tab" onclick="showTab(3)">🔀 ファンダ×テクニカル</button>
+  <button class="tab" onclick="showTab(4)">🎯 ガイダンス</button>
+</div>
+
+<!-- TAB 0: 業績推移 -->
+<div class="panel active" id="panel0">
+  <div class="grid2">
+    <div class="card">
+      <h3>四半期売上 vs EPS</h3>
+      <canvas id="revEpsChart"></canvas>
+    </div>
+    <div class="card">
+      <h3>サマリー</h3>
+      <table class="summary-table">
+        <tr><td>現在株価</td><td><strong>$132.5</strong></td></tr><tr><td>ATH</td><td><strong>$133.18 (2026/05/14)</strong></td></tr><tr><td>MA50</td><td><strong>$90.7</strong></td></tr><tr><td>MA200</td><td><strong>$72.9</strong></td></tr><tr><td>RSI</td><td><strong>69.4 (中立〜過熱気味)</strong></td></tr><tr><td>2025売上</td><td><strong>$601.8M (+38% YoY)</strong></td></tr><tr><td>バックログ</td><td><strong>$1.85B</strong></td></tr><tr><td>打ち上げ(2025)</td><td><strong>21回</strong></td></tr><tr><td>コンセンサスPT</td><td><strong>$97〜$120</strong></td></tr><tr><td>アナリスト評価</td><td><strong>Buy 12 / Hold 5 / Sell 0</strong></td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- TAB 1: KPIトレンド -->
+<div class="panel" id="panel1">
+  <div class="grid3">
+    <div class="card">
+      <h3>打ち上げ回数（Electron 年次）</h3>
+      <canvas id="launchChart"></canvas>
+    </div>
+    <div class="card">
+      <h3>バックログ推移 ($M)</h3>
+      <canvas id="backlogChart"></canvas>
+    </div>
+    <div class="card">
+      <h3>セグメント別売上 (2025通期)</h3>
+      <canvas id="segChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- TAB 2: テクニカル -->
+<div class="panel" id="panel2">
+  <div class="grid2">
+    <div class="card">
+      <h3>株価 vs MA (四半期末推移)</h3>
+      <canvas id="techChart"></canvas>
+    </div>
+    <div class="card">
+      <h3>サポレジ・テクニカルサマリー</h3>
+      <table class="summary-table">
+        <tr><td>現在株価</td><td><strong>$132.5</strong></td></tr>
+        <tr><td>ATH</td><td><strong>$133.18 (2026/05/14)</strong></td></tr>
+        <tr><td>MA50</td><td><strong>$90.7 ↗ 上昇中</strong></td></tr>
+        <tr><td>MA200</td><td><strong>$72.9 ゴールデンクロス済</strong></td></tr>
+        <tr><td>RSI</td><td><strong>69.4 (中立〜やや過熱)</strong></td></tr>
+        <tr><td>MACD</td><td><strong>強気シグナル</strong></td></tr>
+        <tr><td>強いレジスタンス</td><td><strong>$133.18 (ATH)</strong></td></tr>
+        <tr><td>主要サポート①</td><td><strong>$90〜$100ゾーン (MA50付近)</strong></td></tr>
+        <tr><td>主要サポート②</td><td><strong>$70〜$75ゾーン (MA200付近)</strong></td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- TAB 3: ファンダ×テクニカル -->
+<div class="panel" id="panel3">
+  <div class="card">
+    <h3>売上YoY成長率 (%) vs 株価四半期末 ($)</h3>
+    <canvas id="fundaTechChart"></canvas>
+  </div>
+</div>
+
+<!-- TAB 4: ガイダンス -->
+<div class="panel" id="panel4">
+  <div class="card">
+    <h3>売上実績 vs ガイダンス ($M)</h3>
+    <canvas id="guidanceChart"></canvas>
+  </div>
+  <div class="card" style="margin-top:16px;">
+    <h3>Q2 2026 ガイダンス</h3>
+    <table class="summary-table">
+      <tr><td>売上ガイダンス</td><td><strong>$225M〜$240M (中値 $232.5M)</strong></td></tr>
+      <tr><td>GAAP 粗利率</td><td><strong>33%〜35%</strong></td></tr>
+      <tr><td>Non-GAAP 粗利率</td><td><strong>38%〜40%</strong></td></tr>
+      <tr><td>前四半期比成長</td><td><strong>+16% QoQ（中値ベース）</strong></td></tr>
+    </table>
+  </div>
+</div>
+
+<script>
+const QUARTERS   = ["Q1'25", "Q2'25", "Q3'25", "Q4'25", "Q1'26"];
+const REV_ACTUAL = [123.0, 144.5, 154.9, 179.7, 200.0];
+const REV_GUIDE  = [null, 135.5, null, 178.0, 192.5];
+const EPS_ACTUAL = [null, -0.13, -0.03, -0.09, null];
+const EPS_GUIDE  = [null, -0.11, null, -0.1, -0.04];
+const PRICE      = [19.5, 22.0, 28.0, 35.0, 132.5];
+const GROWTH     = [32, 36, 48, 36, 57];
+const LAUNCH_Q   = ["2023", "2024", "2025"];
+const LAUNCHES   = [10, 16, 21];
+const BACKLOG_Q  = ["Q1'25", "Q4'25"];
+const BACKLOG    = [1070, 1850];
+const SEG_LABELS = ["Space Systems", "Launch Services"];
+const SEG_VALUES = [402.8, 199.0];
+
+const BLUE='#58a6ff', GREEN='#3fb950', ORANGE='#d29922', RED='#f85149', PURPLE='#bc8cff', CYAN='#39d353';
+
+// TABコントロール
+function showTab(n) {
+  document.querySelectorAll('.panel').forEach((p,i) => p.classList.toggle('active', i===n));
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', i===n));
+}
+
+const chartDefaults = {
+  responsive: true,
+  plugins: { legend: { labels: { color: '#e6edf3', font: { size: 11 } } } },
+  scales: {
+    x: { ticks: { color: '#8b949e' }, grid: { color: '#21262d' } },
+    y: { ticks: { color: '#8b949e' }, grid: { color: '#21262d' } },
+  }
+};
+
+// Chart0: 業績推移
+new Chart(document.getElementById('revEpsChart'), {
+  data: {
+    labels: QUARTERS,
+    datasets: [
+      { type:'bar',  label:'売上実績 ($M)', data: REV_ACTUAL, backgroundColor: BLUE+'99', yAxisID:'y' },
+      { type:'line', label:'EPS実績',        data: EPS_ACTUAL, borderColor: RED,    pointBackgroundColor: RED,    yAxisID:'y2', tension:0.3 },
+      { type:'line', label:'EPSガイダンス',  data: EPS_GUIDE,  borderColor: ORANGE, pointBackgroundColor: ORANGE, yAxisID:'y2', tension:0.3, borderDash:[5,5] },
+    ]
+  },
+  options: { ...chartDefaults, scales: { x: chartDefaults.scales.x,
+    y:  { ...chartDefaults.scales.y, position:'left',  title:{ display:true, text:'売上 ($M)', color:'#8b949e' } },
+    y2: { ...chartDefaults.scales.y, position:'right', title:{ display:true, text:'EPS ($)', color:'#8b949e' }, grid:{ drawOnChartArea:false } }
+  } }
+});
+
+// Chart1a: 打ち上げ回数
+new Chart(document.getElementById('launchChart'), {
+  type:'bar',
+  data: { labels: LAUNCH_Q, datasets: [{ label:'打ち上げ回数', data: LAUNCHES, backgroundColor: GREEN+'99' }] },
+  options: chartDefaults
+});
+
+// Chart1b: バックログ
+new Chart(document.getElementById('backlogChart'), {
+  type:'bar',
+  data: { labels: BACKLOG_Q, datasets: [{ label:'バックログ ($M)', data: BACKLOG, backgroundColor: PURPLE+'99' }] },
+  options: chartDefaults
+});
+
+// Chart1c: セグメント別（ドーナツ）
+new Chart(document.getElementById('segChart'), {
+  type:'doughnut',
+  data: { labels: SEG_LABELS, datasets: [{ data: SEG_VALUES, backgroundColor:[BLUE,ORANGE] }] },
+  options: { responsive:true, plugins:{ legend:{ labels:{ color:'#e6edf3' } } } }
+});
+
+// Chart2: テクニカル
+new Chart(document.getElementById('techChart'), {
+  type:'line',
+  data: { labels: QUARTERS, datasets: [
+    { label:'株価 ($)', data: PRICE, borderColor: CYAN, tension:0.3 },
+    { label:'MA50参考', data: [null,null,null,null,90.7], borderColor: ORANGE, borderDash:[5,5], pointRadius:0 },
+    { label:'MA200参考', data: [null,null,null,null,72.9], borderColor: RED, borderDash:[5,5], pointRadius:0 },
+  ]},
+  options: chartDefaults
+});
+
+// Chart3: ファンダ×テクニカル
+new Chart(document.getElementById('fundaTechChart'), {
+  data: {
+    labels: QUARTERS,
+    datasets: [
+      { type:'bar',  label:'売上YoY成長率 (%)', data: GROWTH, backgroundColor: GREEN+'99', yAxisID:'y' },
+      { type:'line', label:'株価 ($)',           data: PRICE,  borderColor: CYAN,           yAxisID:'y2', tension:0.3 },
+    ]
+  },
+  options: { ...chartDefaults, scales: { x: chartDefaults.scales.x,
+    y:  { ...chartDefaults.scales.y, position:'left',  title:{ display:true, text:'YoY成長率 (%)', color:'#8b949e' } },
+    y2: { ...chartDefaults.scales.y, position:'right', title:{ display:true, text:'株価 ($)', color:'#8b949e' }, grid:{ drawOnChartArea:false } }
+  } }
+});
+
+// Chart4: ガイダンス
+new Chart(document.getElementById('guidanceChart'), {
+  data: {
+    labels: QUARTERS,
+    datasets: [
+      { type:'bar',  label:'売上実績 ($M)',      data: REV_ACTUAL, backgroundColor: BLUE+'99' },
+      { type:'line', label:'売上ガイダンス ($M)', data: REV_GUIDE,  borderColor: ORANGE, borderDash:[5,5], pointBackgroundColor: ORANGE, tension:0.3 },
+    ]
+  },
+  options: chartDefaults
+});
+</script>
+</body>
+</html>
